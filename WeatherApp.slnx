@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WeatherApp.Api/WeatherApp.Api.csproj" />
+    <Project Path="src/WeatherApp.Application/WeatherApp.Application.csproj" />
+    <Project Path="src/WeatherApp.Contracts/WeatherApp.Contracts.csproj" />
+    <Project Path="src/WeatherApp.Domain/WeatherApp.Domain.csproj" />
+    <Project Path="src/WeatherApp.Infrastructure/WeatherApp.Infrastructure.csproj" />
+    <Project Path="src/WeatherApp.Web/WeatherApp.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WeatherApp.Api.Tests/WeatherApp.Api.Tests.csproj" />
+    <Project Path="tests/WeatherApp.Application.Tests/WeatherApp.Application.Tests.csproj" />
+    <Project Path="tests/WeatherApp.Domain.Tests/WeatherApp.Domain.Tests.csproj" />
+    <Project Path="tests/WeatherApp.Infrastructure.Tests/WeatherApp.Infrastructure.Tests.csproj" />
+    <Project Path="tests/WeatherApp.Web.Tests/WeatherApp.Web.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,54 @@
+name: weatherapp
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+      args:
+        BUILD_CONFIGURATION: Release
+    image: weatherapp-api:latest
+    container_name: weatherapp-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Базовый URL WeatherAPI и параметры.
+      WeatherApi__BaseUrl: https://api.weatherapi.com/v1/
+      WeatherApi__Latitude: "55.7558"
+      WeatherApi__Longitude: "37.6173"
+      WeatherApi__ForecastDays: "3"
+      WeatherApi__Timeout: "00:00:10"
+      # CORS-политика для Web в этой же compose-сети.
+      Cors__AllowedOrigins__0: http://localhost:8081
+      Cors__AllowedOrigins__1: http://web:8081
+      # Ключ обязателен, прокидывается из .env.
+      WeatherApi__ApiKey: ${WEATHERAPI_KEY:?WEATHERAPI_KEY is required}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        BUILD_CONFIGURATION: Release
+    image: weatherapp-web:latest
+    container_name: weatherapp-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Внутри compose-сети Web ходит к API по имени сервиса.
+      Backend__BaseUrl: http://api:8080/
+    ports:
+      - "8081:8081"
