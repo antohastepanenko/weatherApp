@@ -1,0 +1,134 @@
+@page "/"
+@page "/weather"
+@rendermode InteractiveServer
+@using WeatherApp.Web.Components.Shared
+@using WeatherApp.Web.Components.Weather
+@using WeatherApp.Web.Services
+@inject IWeatherBackendClient BackendClient
+@implements IAsyncDisposable
+
+<PageTitle>Погода в Москве</PageTitle>
+
+<main class="weather-page">
+    <header class="weather-header">
+        <div>
+            <p class="eyebrow">Москва · @weather?.Location.TimeZoneId</p>
+            <h1>Погода в Москве</h1>
+            @if (weather is not null)
+            {
+                <p class="last-updated">Обновлено @weather.Current.UpdatedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+            }
+        </div>
+        @if (weather is not null)
+        {
+            <button class="refresh-button" type="button" @onclick="LoadWeatherAsync" disabled="@isLoading" aria-label="Обновить прогноз">↻ <span>Обновить</span></button>
+        }
+    </header>
+
+    @if (isLoading && weather is null)
+    {
+        <LoadingState />
+    }
+    else if (errorMessage is not null && weather is null)
+    {
+        <ErrorState Message="@errorMessage" IsRetrying="@isLoading" OnRetry="LoadWeatherAsync" />
+    }
+    else if (weather is not null)
+    {
+        <CurrentWeatherCard Weather="@weather.Current" />
+        <HourlyForecast Hours="@weather.Hourly" />
+        <DailyForecast Days="@weather.Daily" />
+        @if (errorMessage is not null)
+        {
+            <ErrorState Message="@errorMessage" IsRetrying="@isLoading" OnRetry="LoadWeatherAsync" />
+        }
+    }
+</main>
+
+@code {
+    private WeatherResponse? weather;
+    private string? errorMessage;
+    private readonly CancellationTokenSource componentCts = new();
+    private bool isLoading;
+    private int loadGeneration;
+
+    /// <summary>
+    /// Запускает первую загрузку данных сразу после инициализации компонента.
+    /// </summary>
+    /// <returns>Задача, завершающаяся после <see cref="LoadWeatherAsync"/>.</returns>
+    protected override Task OnInitializedAsync() => LoadWeatherAsync();
+
+    /// <summary>
+    /// Загружает данные о погоде через <see cref="IWeatherBackendClient"/>.
+    /// Если в момент вызова уже идёт предыдущая загрузка, она продолжается до конца,
+    /// но её результат игнорируется: на UI применяется только ответ самого последнего вызова.
+    /// При успехе обновляет состояние, при ошибке — показывает сообщение.
+    /// </summary>
+    /// <returns>Задача, завершающаяся после отрисовки результата.</returns>
+    private async Task LoadWeatherAsync()
+    {
+        var token = componentCts.Token;
+        var generation = Interlocked.Increment(ref loadGeneration);
+        isLoading = true;
+        errorMessage = null;
+        if (weather is null)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+
+        try
+        {
+            weather = await BackendClient.GetWeatherAsync(token);
+            if (generation == Volatile.Read(ref loadGeneration))
+            {
+                errorMessage = null;
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            // Компонент disposed — тихо завершаемся.
+            return;
+        }
+        catch (WeatherBackendException exception)
+        {
+            if (generation == Volatile.Read(ref loadGeneration))
+            {
+                errorMessage = exception.Message;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            if (generation == Volatile.Read(ref loadGeneration))
+            {
+                errorMessage = "Не удалось связаться с backend. Повторите попытку.";
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // HttpClient бросил TaskCanceledException по внутреннему timeout.
+            // Это не «наша» отмена (componentCts ещё жив), значит backend не успел ответить.
+            if (generation == Volatile.Read(ref loadGeneration))
+            {
+                errorMessage = "Сервер не отвечает. Повторите попытку.";
+            }
+        }
+        finally
+        {
+            if (generation == Volatile.Read(ref loadGeneration))
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Отменяет загрузки и освобождает связанные ресурсы.
+    /// </summary>
+    /// <returns>Задача завершения отмены.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        componentCts.Cancel();
+        componentCts.Dispose();
+    }
+}

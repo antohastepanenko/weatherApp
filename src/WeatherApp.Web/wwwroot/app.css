@@ -1,0 +1,64 @@
+:root {
+    color-scheme: dark;
+    --page: #0a1020;
+    --surface: #121b2d;
+    --surface-raised: #19253a;
+    --line: #2d3a52;
+    --text: #f5f7fb;
+    --muted: #a9b5ca;
+    --accent: #74d3ff;
+    --accent-strong: #b3ebff;
+    --danger: #ff9d9d;
+}
+html, body { margin: 0; min-height: 100%; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--page); color: var(--text); }
+* { box-sizing: border-box; }
+button { font: inherit; }
+.weather-page { width: min(1100px, calc(100% - 2rem)); margin: 0 auto; padding: 3rem 0 4rem; }
+.weather-header, .section-heading, .day-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.weather-header { margin-bottom: 2rem; }
+.eyebrow { margin: 0 0 .4rem; color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; font-weight: 700; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { margin-bottom: .5rem; font-size: clamp(2.2rem, 6vw, 4.6rem); line-height: .95; letter-spacing: -.06em; }
+h2 { margin-bottom: 0; font-size: 1.35rem; }
+h3 { margin: 0; font-size: 1rem; }
+.last-updated { color: var(--muted); margin-bottom: 0; }
+.refresh-button, .retry-button { border: 1px solid var(--line); border-radius: 999px; padding: .65rem 1rem; background: var(--surface); color: var(--text); cursor: pointer; }
+.refresh-button:hover, .retry-button:hover { border-color: var(--accent); color: var(--accent-strong); }
+button:disabled { opacity: .55; cursor: wait; }
+.weather-card, .weather-section, .weather-state { background: var(--surface); border: 1px solid var(--line); border-radius: 1.25rem; }
+.weather-card, .weather-section { padding: 1.4rem; }
+.current-card { margin-bottom: 1rem; background: linear-gradient(135deg, var(--surface-raised), var(--surface)); }
+.current-temperature { margin: 2rem 0 .2rem; font-size: clamp(4rem, 13vw, 8rem); line-height: .8; font-weight: 750; letter-spacing: -.08em; }
+.current-temperature span { margin-left: .25rem; font-size: 2rem; letter-spacing: 0; color: var(--accent); }
+.feels-like { margin-top: 20px; }
+.feels-like, .hour-card span, .hour-card small, .day-card p, .day-card small { color: var(--muted); }
+.weather-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0 0; }
+.weather-facts div { border-top: 1px solid var(--line); padding-top: .75rem; }
+.weather-facts dt { color: var(--muted); font-size: .8rem; }
+.weather-facts dd { margin: .25rem 0 0; font-weight: 650; }
+.weather-section { margin-top: 1rem; }
+.hourly-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: .6rem; margin-top: 1.2rem; }
+.hour-card, .day-card { background: var(--surface-raised); border: 1px solid var(--line); border-radius: .9rem; padding: .85rem; }
+.hour-card { display: flex; min-height: 150px; flex-direction: column; gap: .45rem; }
+.hour-card time { color: var(--accent-strong); font-weight: 700; }
+.hour-card strong { font-size: 1.5rem; }
+.hour-card small, .day-card small { font-size: .78rem; }
+.weather-icon { width: 42px; height: 42px; object-fit: contain; }
+.weather-icon-large { width: 84px; height: 84px; }
+.daily-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-top: 1.2rem; }
+.day-card { min-height: 180px; display: flex; flex-direction: column; gap: .6rem; }
+.day-card-header { align-items: center; }
+.day-temperatures { display: flex; align-items: baseline; gap: .55rem; }
+.day-temperatures strong { font-size: 2rem; }
+.day-temperatures span { color: var(--muted); }
+.weather-state { min-height: 180px; display: grid; place-content: center; justify-items: center; gap: 1rem; padding: 2rem; text-align: center; }
+.error-state { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); color: var(--danger); }
+.loading-spinner { width: 1.5rem; height: 1.5rem; border: .18rem solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) {
+    .weather-page { padding-top: 2rem; }
+    .weather-header { align-items: flex-start; flex-direction: column; }
+    .weather-facts, .daily-grid { grid-template-columns: 1fr; }
+    .hourly-list { display: flex; overflow-x: auto; padding-bottom: .35rem; }
+    .hour-card { flex: 0 0 112px; }
+}

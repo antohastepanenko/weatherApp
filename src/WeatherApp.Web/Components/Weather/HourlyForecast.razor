@@ -1,0 +1,27 @@
+@using WeatherApp.Contracts
+<section class="weather-section" aria-labelledby="hourly-heading">
+    <div class="section-heading"><div><p class="eyebrow">Ближайшие часы</p><h2 id="hourly-heading">Почасовой прогноз</h2></div></div>
+    <div class="hourly-list" role="list">
+        @foreach (var hour in Hours)
+        {
+            <article class="hour-card" role="listitem">
+                <time datetime="@hour.Time.ToString("O")">@hour.Time.ToString("HH:mm")</time>
+                @if (!string.IsNullOrWhiteSpace(hour.IconUrl)) { <img class="weather-icon" src="@hour.IconUrl" alt="@hour.ConditionText" /> }
+                <strong>@Format(hour.TemperatureC)°</strong>
+                <span>@hour.ConditionText</span>
+                <small>Дождь @Format(hour.ChanceOfRain)%</small>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    /// <summary>Почасовые записи для отображения.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<HourlyWeather> Hours { get; set; } = [];
+
+    /// <summary>Форматирует дробное значение с одной десятичной цифрой или "—", если null.</summary>
+    private static string Format(double? value) => value?.ToString("0.#") ?? "—";
+
+    /// <summary>Форматирует целое число или "—", если null.</summary>
+    private static string Format(int? value) => value?.ToString() ?? "—";
+}

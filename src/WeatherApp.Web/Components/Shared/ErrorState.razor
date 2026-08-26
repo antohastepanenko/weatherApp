@@ -1,0 +1,15 @@
+<div class="weather-state error-state" aria-live="assertive" role="alert">
+    <p>@Message</p>
+    <button class="retry-button" type="button" @onclick="OnRetry" disabled="IsRetrying">@(IsRetrying ? "Повторяем…" : "Повторить")</button>
+</div>
+
+@code {
+    /// <summary>Сообщение об ошибке, готовое к показу пользователю.</summary>
+    [Parameter, EditorRequired] public string Message { get; set; } = string.Empty;
+
+    /// <summary>Признак того, что сейчас идёт повторная попытка (для disabled/лейбла кнопки).</summary>
+    [Parameter] public bool IsRetrying { get; set; }
+
+    /// <summary>Колбэк повторной попытки, вызываемый по клику на кнопку.</summary>
+    [Parameter, EditorRequired] public EventCallback OnRetry { get; set; }
+}

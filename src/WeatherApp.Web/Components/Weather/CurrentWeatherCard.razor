@@ -1,0 +1,31 @@
+@using WeatherApp.Contracts
+<section class="weather-card current-card" aria-labelledby="current-heading">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Сейчас</p>
+            <h2 id="current-heading">@Weather.ConditionText</h2>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Weather.IconUrl))
+        {
+            <img class="weather-icon weather-icon-large" src="@Weather.IconUrl" alt="@Weather.ConditionText" />
+        }
+    </div>
+    <div class="current-temperature">@Format(Weather.TemperatureC)<span>°C</span></div>
+    <p class="feels-like">Ощущается как @Format(Weather.FeelsLikeC)°C</p>
+    <dl class="weather-facts">
+        <div><dt>Влажность</dt><dd>@Format(Weather.Humidity)%</dd></div>
+        <div><dt>Ветер</dt><dd>@Format(Weather.WindKph) км/ч @Weather.WindDirection</dd></div>
+        <div><dt>Давление</dt><dd>@Format(Weather.PressureMb) мбар</dd></div>
+    </dl>
+</section>
+
+@code {
+    /// <summary>Текущие погодные условия.</summary>
+    [Parameter, EditorRequired] public CurrentWeather Weather { get; set; } = default!;
+
+    /// <summary>Форматирует дробное значение с одной десятичной цифрой или "—", если null.</summary>
+    private static string Format(double? value) => value?.ToString("0.#") ?? "—";
+
+    /// <summary>Форматирует целое число или "—", если null.</summary>
+    private static string Format(int? value) => value?.ToString() ?? "—";
+}
