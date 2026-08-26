@@ -1,0 +1,26 @@
+## Build output
+bin/
+obj/
+
+## IDE
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+*.DotSettings.user
+
+## Secrets
+.env
+.env.*
+!.env.example
+
+## Tooling (machine-local, not part of the project)
+.claude/
+
+## OS
+.DS_Store
+
+## Test output
+TestResults/
+coverage/
