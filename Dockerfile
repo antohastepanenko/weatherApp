@@ -22,20 +22,27 @@ RUN dotnet restore src/WeatherApp.Web/WeatherApp.Web.csproj
 # Копируем остальной исходный код.
 COPY src/ src/
 
-# Сначала выполняем build (без --no-restore), чтобы MSBuild сгенерировал
-# staticwebassets.build.json для Blazor-проекта. Без этого publish для Web
-# не подхватит фреймворк-ассеты Microsoft.AspNetCore.App.Internal.Assets
-# (в частности, _framework/blazor.web.js), и Blazor не сможет загрузиться.
+# build API — без static web assets, без особенностей.
 RUN dotnet build src/WeatherApp.Api/WeatherApp.Api.csproj \
         -c $BUILD_CONFIGURATION --no-restore
+# build Web. Генерирует staticwebassets.build.json, который нужен publish-шагу
+# ниже. Сам по себе этот шаг не публикует фреймворк-ассеты — это делает
+# последующий dotnet publish (без --no-build) для Web.
 RUN dotnet build src/WeatherApp.Web/WeatherApp.Web.csproj \
         -c $BUILD_CONFIGURATION --no-restore
 
-# Публикуем оба приложения.
+# Публикуем API (--no-build допустим: у него нет static web assets).
 RUN dotnet publish src/WeatherApp.Api/WeatherApp.Api.csproj \
         -c $BUILD_CONFIGURATION -o /app/publish/api --no-build /p:UseAppHost=false
+# Публикуем Web БЕЗ --no-build. Это принудительно пересобирает проект и
+# гарантирует, что MSBuild подтянет фреймворк-ассеты
+# Microsoft.AspNetCore.App.Internal.Assets (включая _framework/blazor.web.js)
+# в wwwroot/_framework/, а endpoints-манифест будет содержать маршруты
+# для MapStaticAssets. Без этого (т.е. с --no-build) контейнер стартует, но
+# в браузере 404 на _framework/blazor.web.js, интерактивный рендеринг ломается,
+# стили не применяются.
 RUN dotnet publish src/WeatherApp.Web/WeatherApp.Web.csproj \
-        -c $BUILD_CONFIGURATION -o /app/publish/web --no-build /p:UseAppHost=false
+        -c $BUILD_CONFIGURATION -o /app/publish/web /p:UseAppHost=false
 
 # ----------------------------------------------------------------------------
 # Общий финальный слой с пользователем app и точкой монтирования /app.
@@ -63,16 +70,16 @@ USER app
 # Этап api: запускает только WeatherApp.Api на 8080.
 # ----------------------------------------------------------------------------
 FROM runtime AS api
-COPY --from=build --chown=app:app /app/publish/api /app/app
+COPY --from=build --chown=app:app /app/publish/api/ /app/
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "/app/app/WeatherApp.Api.dll"]
+ENTRYPOINT ["dotnet", "/app/WeatherApp.Api.dll"]
 
 # ----------------------------------------------------------------------------
 # Этап web: запускает только WeatherApp.Web на 8081.
 # ----------------------------------------------------------------------------
 FROM runtime AS web
-COPY --from=build --chown=app:app /app/publish/web /app/app
+COPY --from=build --chown=app:app /app/publish/web/ /app/
 ENV ASPNETCORE_URLS=http://+:8081
 EXPOSE 8081
-ENTRYPOINT ["dotnet", "/app/app/WeatherApp.Web.dll"]
+ENTRYPOINT ["dotnet", "/app/WeatherApp.Web.dll"]
